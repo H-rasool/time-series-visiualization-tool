@@ -1,0 +1,95 @@
+<div class="container">
+  <h1>CSV Time Series Visualization</h1>
+  
+  <div class="delta-instructions">
+    <i class="info-icon">ℹ️</i> 
+    Click on two points to calculate the delta between them.
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading and processing CSV data... {{ progress }}%</div>
+    <div class="loading-subtext" *ngIf="progress > 50">Preparing visualization...</div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <div class="error-message">{{ error }}</div>
+    <button class="retry-button" (click)="loadCsvData()">Retry</button>
+  </div>
+
+  <!-- Main content when loaded -->
+  <div *ngIf="loadComplete && !loading" class="chart-layout">
+    <!-- Upper half with two columns -->
+    <div class="upper-half">
+      <!-- Left column: Channel selection -->
+      <div class="channels-panel">
+        <div class="channel-header">
+          <div class="channels-label">Channels:</div>
+          <div class="channel-actions">
+            <button class="small-button" (click)="selectAllChannels()">Select All</button>
+            <button class="small-button" (click)="deselectAllChannels()">Deselect All</button>
+            <button class="small-button" (click)="updateChartData()">Update Chart</button>
+          </div>
+        </div>
+        
+        <div class="channels-grid">
+          <label *ngFor="let col of columns" class="channel-checkbox" [class.selected]="isChannelSelected(col)">
+            <input
+              type="checkbox"
+              [checked]="isChannelSelected(col)"
+              (change)="toggleChannel(col)" />
+            <span class="channel-name">{{ col }}</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Right column: Controls and Status -->
+      <div class="status-panel">
+        <div class="control-actions">
+          <button class="action-button export-button" (click)="exportData()" title="Export selected channels to CSV">
+            <span class="button-icon">⬇️</span> Export CSV
+          </button>
+          
+          <div class="view-badge">
+            <span class="mode-indicator">Stacked View</span>
+          </div>
+        </div>
+        
+        <div class="timing-info" *ngIf="timingReport">{{ timingReport }}</div>
+        
+        <!-- Preview info -->
+        <div class="preview">
+          <div class="preview-item">
+            <span class="preview-label">Selected:</span>
+            <span class="preview-value">{{ selectedChannels.join(', ') || 'None' }}</span>
+          </div>
+          <div class="preview-item">
+            <span class="preview-label">Total data points:</span>
+            <span class="preview-value">{{ totalPoints.toLocaleString() }}</span>
+          </div>
+          <div class="preview-item" *ngIf="visiblePoints !== totalPoints">
+            <span class="preview-label">Visible data points:</span>
+            <span class="preview-value">{{ visiblePoints.toLocaleString() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Lower half: Chart -->
+    <div class="chart-wrapper">
+      <div
+        echarts
+        [options]="chartOption"
+        [initOpts]="initOpts"
+        class="demo-chart"
+        (chartInit)="onChartInit($event)">
+      </div>
+
+      <!-- Add this SVG overlay container -->
+      <div class="reference-lines-overlay" id="reference-lines-container"></div>
+    </div>
+  </div>
+</div>
